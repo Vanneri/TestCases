@@ -1,0 +1,328 @@
+<odoo>
+    <data>
+        <template id="assets_frontend" inherit_id="web_editor.assets_frontend" name="Portal Assets">
+            <xpath expr="//script[last()]" position="after">
+                <script type="text/javascript" src="/employee_order/static/src/js/portal.js"></script>
+            </xpath>
+        </template>
+        <template id="portal_my_home_employee_order" name="Show Employee Order" customize_show="True"
+                  inherit_id="portal.portal_my_home" priority="20">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Employee Order</t>
+                    <t t-set="url" t-value="'/my/emporder'"/>
+                    <t t-set="placeholder_count" t-value="'order_count'"/>
+                </t>
+            </xpath>
+        </template>
+
+        <template id="portal_my_home_menu_employee_order" name="Portal layout : sales menu entries"
+                  inherit_id="portal.portal_breadcrumbs" priority="20">
+            <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+                <li t-if="page_name == 'employeeorder' or employee_order and employee_order.state not in ('sent', 'cancel')"
+                    t-attf-class="breadcrumb-item #{'active ' if not employee_order else ''}">
+                    <a t-if="employee_order" t-attf-href="/my/emporder?{{ keep_query() }}">Employee Order</a>
+                    <t t-else="">Employee Order</t>
+                </li>
+                <li t-if="employee_order" class="breadcrumb-item active">
+                    <t>Employee Order</t>
+                    <t t-esc="employee_order.name"/>
+                </li>
+                <li t-if="page_name == 'create_emp_order'" class="breadcrumb-item">Create Order</li>
+            </xpath>
+        </template>
+        <template id="portal_layout_employee_order_create" name="Create Order">
+            <a role="button" type="button" class="btn btn-primary" t-attf-href="/my/emporder/create">Create Order</a>
+        </template>
+
+        <template id="portal_my_employee_orders" name="My Employee Orders">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+                <t t-call="portal.portal_searchbar">
+                    <t t-set="title">Employee Order</t>
+                </t>
+                <t t-if="not orders">
+                    <p>There are currently no orders for your account.</p>
+                </t>
+                <t t-if="not manager">
+                    <t t-call="employee_order.portal_layout_employee_order_create">
+                    </t>
+
+                </t>
+                <t t-if="orders" t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>
+                                <span class='d-none d-md-inline'>Employee Order #</span>
+                                <span class='d-block d-md-none'>Ref.</span>
+                            </th>
+                            <th class="text-right">Order Date</th>
+                            <th class="text-center">State</th>
+                            <th class="text-right">Created Date</th>
+                            <th class="text-right">Attachment Count</th>
+                        </tr>
+                    </thead>
+                    <t t-foreach="orders" t-as="order">
+                        <tr>
+                            <td>
+                                <a t-att-href="order.get_portal_url()">
+                                    <t t-esc="order.name"/>
+                                </a>
+                            </td>
+                            <td class="text-right">
+                                <span t-field="order.date_order" t-options="{'widget': 'date'}"/>&amp;nbsp;
+                                <span class='d-none d-md-inline' t-field="order.date_order"
+                                      t-options="{'time_only': True}"/>
+                            </td>
+                            <td class="text-center">
+                                <span t-if="order.state not in ['rejected','done']" class="badge badge-pill badge-info">
+                                    <span t-field="order.state"/>
+                                </span>
+                                <span t-if="order.state == 'done'" class="badge badge-pill badge-success">
+                                    <span t-field="order.state"/>
+                                </span>
+                                <span t-if="order.state == 'rejected'" class="badge badge-pill badge-danger">
+                                    <span t-field="order.state"/>
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <span t-field="order.create_date"/>
+                            </td>
+                            <td class="text-right">
+                                <span t-field="order.attachment_counts"/>
+                            </td>
+                        </tr>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <template id="employee_order_portal_content" name="Employee Order Portal Content">
+            <!-- Intro -->
+            <div id="introduction" t-attf-class="pb-2 pt-3 #{'card-header bg-white' if report_type == 'html' else ''}">
+                <h2 class="my-0">
+                    <em t-esc="employee_order.name"/>
+                </h2>
+            </div>
+            <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
+                <!-- Informations -->
+                <div id="informations">
+                    <div class="row" id="emp_date">
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Order Date:</strong>
+                            </t>
+                            <span t-field="employee_order.date_order" t-options='{"widget": "date"}'/>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="details" style="page-break-inside: auto;" class="mt32">
+                    <div class="row" id="emp_details1">
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Product:</strong>
+                            </t>
+                            <span t-field="employee_order.product_id"/>
+                        </div>
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Supplier:</strong>
+                            </t>
+                            <span t-field="employee_order.partner_id"/>
+                        </div>
+                    </div>
+                    <div class="row" id="emp_details2">
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Net Price:</strong>
+                            </t>
+                            <span t-field="employee_order.price_unit"/>
+                        </div>
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Gross price:</strong>
+                            </t>
+                            <span t-field="employee_order.price_total"/>
+                        </div>
+                    </div>
+                    <div class="row" id="emp_details3">
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Order status:</strong>
+                            </t>
+                            <span t-field="employee_order.state"/>
+                        </div>
+                    </div>
+                    <div class="row" id="emp_details4">
+                        <div class="mb-3 col-6">
+                            <t>
+                                <strong>Related Documents:</strong>
+                            </t>
+                            <br/>
+                            <t t-foreach="employee_order.attachment_ids" t-as="attachment">
+                                <a t-att-href="'/attachment/download?attachment_id=%i' % attachment.id">
+                                    <span t-esc="attachment.name" class="fa fa-download"/>
+                                </a>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </template>
+
+        <template id="employee_order_portal_template" name="Employee Order Portal Template"
+                  inherit_id="portal.portal_sidebar" primary="True">
+            <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+                <div class="row mt16 o_portal_sale_sidebar">
+                    <!-- Sidebar -->
+                    <t t-call="portal.portal_record_sidebar">
+                        <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
+                        <t t-set="title">
+                            <h2 class="mb-0"><b t-field="employee_order.price_unit" data-id="total_amount"/></h2>
+                        </t>
+                        <t t-set="entries">
+                            <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
+                                <li class="list-group-item flex-grow-1" t-if="manager and employee_order.state == 'draft'">
+                                    <a role="button" class="btn btn-primary btn-block mb8"
+                                       t-attf-href="#{employee_order.get_portal_url(suffix='/accept')}">
+                                        <i class="fa fa-check"/><t> Accept</t>
+                                    </a>
+                                    <a role="button" class="btn btn-danger btn-block mb8"
+                                       t-attf-href="#{employee_order.get_portal_url(suffix='/reject')}">
+                                        <i class="fa fa-check"/><t> Reject</t>
+                                    </a>
+                                </li>
+                                <li class="list-group-item flex-grow-1" t-if="not manager and employee_order.state == 'approved'">
+                                    <a role="button" class="btn btn-primary btn-block mb8"
+                                       t-attf-href="#{employee_order.get_portal_url(suffix='/buypro')}">
+                                        <i class="fa fa-check"/><t> But Product</t>
+                                    </a>
+                                </li>
+                                <li t-if="employee_order.user_id" class="list-group-item flex-grow-1">
+                                    <div class="small mb-1"><strong class="text-muted">User</strong></div>
+                                    <div class="row flex-nowrap">
+                                        <div class="col flex-grow-0 pr-2">
+                                            <img class="rounded-circle mr4 float-left o_portal_contact_img"
+                                                 t-if="employee_order.user_id.image_1024"
+                                                 t-att-src="image_data_uri(employee_order.user_id.image_1024)"
+                                                 alt="Contact"/>
+                                            <img class="rounded-circle mr4 float-left o_portal_contact_img"
+                                                 t-if="not employee_order.user_id.image_1024"
+                                                 src="/web/static/src/img/placeholder.png" alt="Contact"/>
+                                        </div>
+                                        <div class="col pl-0" style="min-width: 150px">
+                                            <span t-field="employee_order.user_id"
+                                                  t-options='{"widget": "contact", "fields": ["name", "address", "phone", "email"], "no_marker": True}'/>
+                                            <span t-field="employee_order.user_id.company_id"/>
+                                            <a href="#discussion" class="small"><i class="fa fa-comment"></i> Send
+                                                message</a>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </t>
+                    </t>
+                    <!-- Page content -->
+                    <div id="quote_content" class="col-12 col-lg justify-content-end">
+                        <!-- main content -->
+                        <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}"
+                             id="portal_employee_content">
+                            <div t-call="employee_order.employee_order_portal_content"/>
+                        </div>
+                        <!-- chatter -->
+                        <div id="employee_order_communication" class="mt-4">
+                            <h2>History</h2>
+                            <t t-call="portal.message_thread">
+                                <t t-set="object" t-value="employee_order"/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </template>
+
+
+        <template id="employee_order_portal_create">
+            <t t-call="portal.portal_layout">
+                <t t-set="additional_title">Employee Order Creation</t>
+                <form action="/my/emporder/create" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="row o_portal_order_details">
+                        <div class="col-lg-8">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <input type="checkbox" id="customtax" name="customtax"
+                                           t-att-checked="'checked' if is_custom_tax else None" style="display:none"/>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6">
+                                    <label class="col-form-label" for="product_id">Product</label>
+                                    <select name="product_id" t-attf-class="form-control">
+                                        <option value="">Product...</option>
+                                        <t t-foreach="products or []" t-as="product">
+                                            <option t-att-value="product.id">
+                                                <t t-esc="product.display_name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6">
+                                    <label class="col-form-label label-optional" for="qty">Amount to buy</label>
+                                    <input type="text" name="qty" t-attf-class="form-control"/>
+                                </div>
+                                <div class="clearfix"/>
+                                <div t-attf-class="form-group col-xl-6">
+                                    <label class="col-form-label" for="supplier_id">Supplier</label>
+                                    <select name="supplier_id" t-attf-class="form-control">
+                                        <option value="">Supplier...</option>
+                                        <t t-foreach="suppliers or []" t-as="supplier">
+                                            <option t-att-value="supplier.price">
+                                                <t t-esc="supplier.display_name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6" style="display:none">
+                                    <label class="col-form-label label-optional" for="supplier">Supplier</label>
+                                    <input type="text" name="supplier" t-attf-class="form-control"/>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6" style="display:none">
+                                    <label class="col-form-label label-optional" for="taxes_id">TAXES</label>
+                                    <input type="text" name="taxes_id" t-attf-class="form-control"/>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6" style="display:none">
+                                    <label class="col-form-label" for="tax_id">Tax</label>
+                                    <select name="tax_id" t-attf-class="form-control">
+                                        <option value="">Tax...</option>
+                                        <t t-foreach="tax_ids or []" t-as="tax">
+                                            <option t-att-value="tax.id">
+                                                <t t-esc="tax.name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="clearfix"/>
+                                <div t-attf-class="form-group col-xl-6">
+                                    <label class="col-form-label label-optional" for="total_gross">Total Gross</label>
+                                    <input type="text" name="total_gross" t-attf-class="form-control"
+                                           disabled="disabled"/>
+                                </div>
+                                <div t-attf-class="form-group col-xl-6">
+                                    <label class="col-form-label label-optional" for="attachment">Upload Attachment</label>
+                                    <input type="file" name="attachment" class="file" data-show-upload="true" data-show-caption="true" lass="file" data-show-preview="true"/>
+                                </div>
+                            </div>
+                            <div class="clearfix">
+                                <button type="submit" class="btn btn-primary float-right mb32 ">
+                                    Create
+                                    <span class="fa fa-long-arrow-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </t>
+        </template>
+    </data>
+</odoo>

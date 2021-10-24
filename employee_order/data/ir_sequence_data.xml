@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequences for employee.order -->
+        <record id="seq_employee_order" model="ir.sequence">
+            <field name="name">Employee Order</field>
+            <field name="code">employee.order</field>
+            <field name="prefix">EO</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+"access_employee_order_group_user","employee_order group_user","model_employee_order","base.group_user",1,1,1,1
+"access_employee_order_config_group_user","employee_order_config group_user","model_employee_order_config","base.group_user",1,1,1,1

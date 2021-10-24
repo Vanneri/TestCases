@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.module.category" id="module_category_employee_order">
+            <field name="name">Employee Order</field>
+            <field name="description">Helps you manage users.</field>
+            <field name="sequence">5</field>
+            <field name="parent_id" eval="False"/>
+        </record>
+        <record model="ir.module.category" id="module_category_employee_order_user_type">
+            <field name="name">User types</field>
+            <field name="description">Helps you manage users.</field>
+            <field name="sequence">5</field>
+            <field name="parent_id" ref="module_category_employee_order"/>
+        </record>
+
+
+
+        <record model="res.groups" id="group_user_employee">
+            <field name="name">Employee</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="category_id" ref="module_category_employee_order_user_type"/>
+        </record>
+
+        <record model="res.groups" id="group_user_manager">
+            <field name="name">Managers</field>
+            <field name="category_id" ref="module_category_employee_order_user_type"/>
+            <field name="implied_ids" eval="[(4, ref('group_user_employee'))]"/>
+        </record>
+
+        <record model="res.groups" id="group_user_internal">
+            <field name="name">Internal</field>
+            <field name="implied_ids" eval="[(4, ref('group_user_manager'))]"/>
+            <field name="category_id" ref="module_category_employee_order_user_type"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+    </data>
+</odoo>
