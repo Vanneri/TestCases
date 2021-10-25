@@ -149,11 +149,11 @@ class CustomerPortal(CustomerPortal):
             EmployeeOrder = request.env['employee.order']
             Attachments = request.env['ir.attachment']
             tax_ids = []
-            taxes_id = literal_eval(post['taxes_id'])
+            taxes_id = post['taxes_id'] and literal_eval(post['taxes_id']) or []
             product_detail = request.env['product.product'].sudo().search([('id', '=', int(post['product_id']))])
             if taxes_id:
                 tax_ids = request.env['account.tax'].sudo().search([('id', 'in', taxes_id)])
-            attachment_name = post.get('attachment').filename
+            attachment_name = post.get('attachment', False) and post.get('attachment', False).filename or False
             file = post.get('attachment')
             try:
                 employee_order = EmployeeOrder.create({
@@ -167,14 +167,15 @@ class CustomerPortal(CustomerPortal):
             except:
                 return {'error': _('Error Occurred.')}
             if employee_order:
-                Attachments.sudo().create({
-                    'name': attachment_name,
-                    'res_name': attachment_name,
-                    'type': 'binary',
-                    'res_model': 'employee.order',
-                    'res_id': employee_order.id,
-                    'datas': base64.b64encode(file.read()),
-                })
+                if attachment_name:
+                    Attachments.sudo().create({
+                        'name': attachment_name,
+                        'res_name': attachment_name,
+                        'type': 'binary',
+                        'res_model': 'employee.order',
+                        'res_id': employee_order.id,
+                        'datas': base64.b64encode(file.read()),
+                    })
                 parent_id = employee_config.sudo().employee_id.parent_id
                 share_link = employee_order.get_base_url() + employee_order._get_share_url()
                 msg = _('<p>Dear <a href=# data-oe-model=res.users data-oe-id=%d>@%s</a>') % (
