@@ -73,6 +73,7 @@ class EmployeeOrder(models.Model):
                                       compute_sudo=True)
     attachment_counts = fields.Integer(string='Attachment Counts', compute='_compute_attachment', store=True,
                                        compute_sudo=True)
+    order_ids = fields.One2many(comodel_name='purchase.order', inverse_name='emp_order_id', string='Orders')
 
     def _compute_attachment(self):
         for order in self:
@@ -101,7 +102,7 @@ class EmployeeOrder(models.Model):
             Purchase.create({
                 'partner_id': order.partner_id.id,
                 'emp_order_id': order.id,
-                'order_line': [(0,0, {
+                'order_line': [(0, 0, {
                     'product_id': order.product_id.id,
                     'product_qty': order.product_qty,
                     'price_unit': order.price_unit,
@@ -121,6 +122,27 @@ class EmployeeOrder(models.Model):
         for order in self:
             order._create_po()
             order.write({'state': 'purchase_in_progress'})
+
+    def action_done(self):
+        for order in self:
+            order.write({'state': 'done'})
+
+    def action_view_po(self):
+        orders = self.mapped('order_ids')
+        action = self.env["ir.actions.actions"]._for_xml_id("purchase.purchase_form_action")
+        if len(orders) > 1:
+            action['domain'] = [('id', 'in', orders.ids)]
+        elif len(orders) == 1:
+            form_view = [(self.env.ref('purchase.purchase_order_form').id, 'form')]
+            if 'views' in action:
+                action['views'] = form_view + [(state, view) for state, view in action['views'] if view != 'form']
+            else:
+                action['views'] = form_view
+            action['res_id'] = orders.id
+        else:
+            action = {'type': 'ir.actions.act_window_close'}
+        return action
+
 
 class EmployeeOrderConfig(models.Model):
     _name = 'employee.order.config'

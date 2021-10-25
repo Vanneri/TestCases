@@ -2,6 +2,7 @@ from ast import literal_eval
 from odoo import fields, http, _
 from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
+from odoo.osv.expression import AND, OR
 from odoo.addons.portal.controllers.mail import _message_post_helper
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager, get_records_pager
 import base64
@@ -22,7 +23,7 @@ class CustomerPortal(CustomerPortal):
 
     def _employee_order_get_page_view_values(self, order, access_token, **kwargs):
         manager = True
-        if not request.env.user.has_group('base.group_erp_manager'):
+        if not request.env.user.has_group('employee_order.group_user_manager'):
             manager = False
         values = {
             'employee_order': order,
@@ -43,8 +44,26 @@ class CustomerPortal(CustomerPortal):
             'page_name': 'home',
         }
 
+    def _get_searchbar_inputs(self):
+        return {
+            'name': {'input': 'number', 'label': _('Search <span class="nolabel"> (in Order Number)</span>')},
+            'date': {'input': 'date', 'label': _('Search in Order Date')},
+            'state': {'input': 'state', 'label': _('Search in State')}
+        }
+
+    def _get_search_domain(self, search_in, search):
+        search_domain = []
+        if search_in == 'number':
+            search_domain = AND([search_domain, [('name', 'ilike', search)]])
+        if search_in == 'date':
+            search_domain = AND([search_domain, [('date_order', '=', search)]])
+        if search_in == 'state':
+            search_domain = AND([search_domain, [('state', 'ilike', search)]])
+        return search_domain
+
     @http.route(['/my/emporder', '/my/emporder/page/<int:page>'], type='http', auth="user", website=True)
-    def portal_my_employee_orders(self, page=1, date_begin=None, date_end=None, sortby=None, **kw):
+    def portal_my_employee_orders(self, page=1, date_begin=None, date_end=None, sortby=None, search=None,
+                                  search_in='number', **kw):
         values = self._prepare_portal_layout_values()
         partner = request.env.user.partner_id
         EmployeeOrder = request.env['employee.order']
@@ -53,7 +72,7 @@ class CustomerPortal(CustomerPortal):
             ('state', 'in', ['draft', 'approved', 'purchase_in_progress', 'ready_to_pick', 'done', 'rejected'])
 
         ]
-        if not request.env.user.has_group('base.group_erp_manager'):
+        if not request.env.user.has_group('employee_order.group_user_manager'):
             manager = False
             domain += [('user_id', '=', request.env.user.id)]
 
@@ -62,6 +81,7 @@ class CustomerPortal(CustomerPortal):
             'name': {'label': _('Reference'), 'order': 'name'},
             'stage': {'label': _('Stage'), 'order': 'state'},
         }
+        searchbar_inputs = self._get_searchbar_inputs()
         # default sortby order
         if not sortby:
             sortby = 'date'
@@ -69,6 +89,9 @@ class CustomerPortal(CustomerPortal):
 
         if date_begin and date_end:
             domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]
+
+        if search and search_in:
+            domain += self._get_search_domain(search_in, search)
 
         # count for pager
         order_count = EmployeeOrder.search_count(domain)
@@ -90,6 +113,7 @@ class CustomerPortal(CustomerPortal):
             'page_name': 'employeeorder',
             'pager': pager,
             'default_url': '/my/emporder',
+            'searchbar_inputs': searchbar_inputs,
             'searchbar_sortings': searchbar_sortings,
             'sortby': sortby,
             'manager': manager
@@ -138,6 +162,7 @@ class CustomerPortal(CustomerPortal):
                     'price_unit': float(post['supplier_id']),
                     'product_qty': post['qty'],
                     'taxes_id': [(6, 0, tax_ids.ids)] if tax_ids else False,
+                    'user_id': user.id,
                 })
             except:
                 return {'error': _('Error Occurred.')}
@@ -150,13 +175,27 @@ class CustomerPortal(CustomerPortal):
                     'res_id': employee_order.id,
                     'datas': base64.b64encode(file.read()),
                 })
-                msg = _(
-                    'Dear %s , the employee %s has requested the following product %s . Please, check the order') % (
-                          employee_config.sudo().employee_id.parent_id.name, employee_config.employee_id.name,
-                          product_detail.name)
+                parent_id = employee_config.sudo().employee_id.parent_id
+                share_link = employee_order.get_base_url() + employee_order._get_share_url()
+                msg = _('<p>Dear <a href=# data-oe-model=res.users data-oe-id=%d>@%s</a>') % (
+                    parent_id.sudo().user_id.id,
+                    parent_id.name)
+                msg += _(
+                    'The employee %s has requested the following product %s.') % (
+                           employee_config.employee_id.name, product_detail.name)
+                msg += _(
+                    'Please, check the order:<a href=%s>%s</a> to approve it or reject it.</p>'
+                ) % (share_link, employee_order.name)
+                msg += _('\n Regards')
                 _message_post_helper(
-                        'employee.order', employee_order.id, msg, token=employee_order.sudo().access_token,
-                    partner_ids=employee_config.sudo().employee_id.parent_id.sudo().user_id.sudo().partner_id.ids)
+                    "employee.order",
+                    employee_order.id,
+                    msg,
+                    token=employee_order.sudo().access_token,
+                    partner_ids=parent_id.sudo().user_id.sudo().partner_id.ids,
+                    message_type="notification",
+                    subtype_xmlid="mail.mt_note",
+                )
 
         values = {
             'partner': partner,
@@ -176,11 +215,19 @@ class CustomerPortal(CustomerPortal):
         except (AccessError, MissingError):
             return request.redirect('/my')
         order_sudo.action_confirm()
+        share_link = order_sudo.get_base_url() + order_sudo._get_share_url()
         msg = _(
-            'Dear %s , your order have been approved. Please go to your order and click on the button Buy product') % (
+            'Dear %s , Your order have been approved.') % (
                   order_sudo.user_id.name)
+        msg += _('\n<p>Please go to your order and click on the button Buy product:<a href=%s>%s</a></p>') % (
+            share_link, order_sudo.name)
         _message_post_helper(
-            'employee.order', order_sudo.id, msg,
+            'employee.order',
+            order_sudo.id,
+            msg,
+            partner_ids=order_sudo.user_id.sudo().partner_id.ids,
+            message_type="notification",
+            subtype_xmlid="mail.mt_note",
             **({'token': access_token} if access_token else {}))
 
         return request.redirect('/my/emporder')

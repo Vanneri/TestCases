@@ -13,9 +13,8 @@ class Home(Home):
         user = request.env['res.users'].sudo().browse(request.session.uid)
         if request.session.uid and user.has_group('employee_order.group_user_internal'):
             return super(Home, self).index(*args, **kw)
-        if request.session.uid and user.has_group('employee_order.group_user_employee'):
-            return http.local_redirect('/my/emporder', query=request.params, keep_hash=True)
-        if request.session.uid and user.has_group('employee_order.group_user_manager'):
+        if request.session.uid and user.has_group('employee_order.group_user_employee') or user.has_group(
+                'employee_order.group_user_manager'):
             return http.local_redirect('/my/emporder', query=request.params, keep_hash=True)
         return super(Home, self).index(*args, **kw)
 
@@ -23,9 +22,8 @@ class Home(Home):
         user = request.env['res.users'].sudo().browse(uid)
         if not redirect and user.has_group('employee_order.group_user_internal'):
             return super(Home, self)._login_redirect(uid, redirect=redirect)
-        if not redirect and user.has_group('employee_order.group_user_employee'):
-            redirect = '/my/emporder'
-        if not redirect and user.has_group('employee_order.group_user_manager'):
+        if not redirect and user.has_group('employee_order.group_user_employee') or user.has_group(
+                'employee_order.group_user_manager'):
             redirect = '/my/emporder'
         return super(Home, self)._login_redirect(uid, redirect=redirect)
 
@@ -34,9 +32,7 @@ class Home(Home):
         user = request.env['res.users'].sudo().browse(request.session.uid)
         if request.session.uid and user.has_group('employee_order.group_user_internal'):
             return super(Home, self).web_client(s_action, **kw)
-        if request.session.uid and user.has_group('employee_order.group_user_employee'):
-            return http.local_redirect('/my/emporder', query=request.params, keep_hash=True)
-        if request.session.uid and user.has_group('employee_order.group_user_manager'):
+        if request.session.uid and user.has_group('employee_order.group_user_employee') or user.has_group(
+                'employee_order.group_user_manager'):
             return http.local_redirect('/my/emporder', query=request.params, keep_hash=True)
         return super(Home, self).web_client(s_action, **kw)
-

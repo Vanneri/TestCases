@@ -16,7 +16,7 @@
             </xpath>
         </template>
 
-        <template id="portal_my_home_menu_employee_order" name="Portal layout : sales menu entries"
+        <template id="portal_my_home_menu_employee_order" name="Portal layout : employee menu entries"
                   inherit_id="portal.portal_breadcrumbs" priority="20">
             <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
                 <li t-if="page_name == 'employeeorder' or employee_order and employee_order.state not in ('sent', 'cancel')"
@@ -38,7 +38,6 @@
         <template id="portal_my_employee_orders" name="My Employee Orders">
             <t t-call="portal.portal_layout">
                 <t t-set="breadcrumbs_searchbar" t-value="True"/>
-
                 <t t-call="portal.portal_searchbar">
                     <t t-set="title">Employee Order</t>
                 </t>
@@ -48,7 +47,6 @@
                 <t t-if="not manager">
                     <t t-call="employee_order.portal_layout_employee_order_create">
                     </t>
-
                 </t>
                 <t t-if="orders" t-call="portal.portal_table">
                     <thead>
@@ -175,7 +173,7 @@
         <template id="employee_order_portal_template" name="Employee Order Portal Template"
                   inherit_id="portal.portal_sidebar" primary="True">
             <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
-                <div class="row mt16 o_portal_sale_sidebar">
+                <div class="row mt16 o_portal_employee_sidebar">
                     <!-- Sidebar -->
                     <t t-call="portal.portal_record_sidebar">
                         <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
@@ -247,7 +245,7 @@
         <template id="employee_order_portal_create">
             <t t-call="portal.portal_layout">
                 <t t-set="additional_title">Employee Order Creation</t>
-                <form action="/my/emporder/create" method="post" enctype="multipart/form-data">
+                <form action="/my/emporder/create" method="post" enctype="multipart/form-data" onsubmit="return confirm('Orders can not be editable on portals once created');">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                     <div class="row o_portal_order_details">
                         <div class="col-lg-8">
@@ -315,7 +313,7 @@
                             </div>
                             <div class="clearfix">
                                 <button type="submit" class="btn btn-primary float-right mb32 ">
-                                    Create
+                                    Request product
                                     <span class="fa fa-long-arrow-right"/>
                                 </button>
                             </div>

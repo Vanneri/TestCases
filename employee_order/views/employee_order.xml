@@ -8,9 +8,16 @@
                 <form string="employee_order_form">
                     <header>
                         <field name="state" widget="statusbar" statusbar_visible="draft,approved,done"/>
-<!--                        <button name="action_buy_pro" type="object" string="Buy Product" states="approved"/>-->
+                        <button name="action_done" string="Lock" class="btn-primary" type="object" states="ready_to_pick"/>
                     </header>
                     <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button type="object"  name="action_view_po"
+                                class="oe_stat_button" string="PO"
+                                icon="fa-pencil-square-o" attrs="{'invisible':['|', ('order_ids', '=', []), ('state', 'in', ('draft','approved','rejected'))]}">
+                                <field name='order_ids' invisible="1"/>
+                            </button>
+                        </div>
                         <div class="oe_title">
                             <h1>
                                 <field name="name" readonly="1"/>

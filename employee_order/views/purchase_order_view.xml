@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="purchase_order_form" model="ir.ui.view">
+            <field name="name">purchase.order.form -- open qty fields</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <field name="qty_to_receive" invisible="1"/>
+                    <button name="%(employee_order.order_send_pickup_date_action)d" string="Send Pickup Date"
+                        type="action"
+                        attrs="{'invisible': [('qty_to_receive', '!=', 0.0)]}"/>
+                </xpath>
+                <field name="qty_received" position="before">
+                    <field name="qty_to_receive"
+                           attrs="{'column_invisible': [('parent.state', 'not in', ('purchase', 'done'))]}"
+                           optional="hide"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

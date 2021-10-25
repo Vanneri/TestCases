@@ -1,3 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-"access_employee_order_group_user","employee_order group_user","model_employee_order","base.group_user",1,1,1,1
-"access_employee_order_config_group_user","employee_order_config group_user","model_employee_order_config","base.group_user",1,1,1,1
+"access_employee_order_group_user_manager","employee_order group_user_manager","model_employee_order","employee_order.group_user_manager",1,1,1,1
+"access_employee_order_group_user_internal","employee_order group_user_internal","model_employee_order","employee_order.group_user_internal",1,1,1,1
+"access_employee_order_group_user_employee","employee_order group_user_employee","model_employee_order","employee_order.group_user_employee",1,1,1,0
+"access_employee_order_config_group_user_manager","employee_order_config group_user_manager","model_employee_order_config","employee_order.group_user_manager",1,1,1,1
+"access_employee_order_config_group_user_internal","employee_order_config group_user_internal","model_employee_order_config","employee_order.group_user_internal",1,1,1,1
+"access_employee_order_config_group_user_employee","employee_order_config group_user_employee","model_employee_order_config","employee_order.group_user_employee",1,1,1,0
+"access_order_send_pick_update_group_user","order_send_pick_update group_user","model_order_send_pick_update","base.group_user",1,1,1,1

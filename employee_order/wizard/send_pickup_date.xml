@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+       <record id="order_send_pickup_date_view_form" model="ir.ui.view">
+           <field name="name">order.send.pickup.date.view.form</field>
+           <field name="model">order.send.pick.update</field>
+           <field name="arch" type="xml">
+               <form string="Send Pickup Date">
+                   <group>
+                       <field name="pickup_date"/>
+                   </group>
+                   <footer>
+                        <button name="send_mail" string="Send" type="object"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+               </form>
+           </field>
+       </record>
+
+        <record id="order_send_pickup_date_action" model="ir.actions.act_window">
+            <field name="name">Send Pickup Date</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">order.send.pick.update</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="purchase.model_purchase_order" />
+            <field name="binding_view_types">list</field>
+        </record>
+
+    </data>
+</odoo>
